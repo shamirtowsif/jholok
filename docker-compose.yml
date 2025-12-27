@@ -1,0 +1,56 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: jholok_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: jholok
+      MYSQL_USER: jholok_user
+      MYSQL_PASSWORD: jholok_pass
+      MYSQL_ROOT_PASSWORD: root_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    container_name: jholok_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jholok_web
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "
+      python manage.py migrate &&
+      python manage.py runserver 0.0.0.0:8000
+      "
+volumes:
+  mysql_data:
+  redis_data:
