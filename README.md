@@ -2,7 +2,6 @@
 
 ## Run on a New Machine
 
-```bash
 # 1. Clone the project
 cd ~/Documents
 git clone git@github.com:shamirtowsif/jholok.git
